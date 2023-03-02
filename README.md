@@ -1,6 +1,6 @@
-# ChatGPT telegram bot script using API
+# ChatGPT telegram bot
 
-This is a telegram bot that uses the [ChatGPT](https://platform.openai.com/docs/guides/chat) API to generate responses to messages.
+This is a telegram bot that uses the [ChatGPT](https://platform.openai.com/docs/guides/chat) API to generate responses to messages. It also uses Whisper API to decode the audio messages and send them to the ChatGPT API.
 
 
 ## Setup
@@ -19,7 +19,7 @@ Run the docker image:
 docker run -d --name chatgpt-telegram-bot chatgpt-telegram-bot
 ```
 
-### Manually
+### Without Docker
 Install dependencies:
 - Python 3
 - pip
@@ -28,7 +28,13 @@ Install dependencies using pip:
 - pip install python-telegram-bot
 - pip install openai
 - pip install python-dotenv
+- pip install pydub
 
+Run the bot using the following command:
+
+```
+python bot.py
+```
 
 ### Environment variables
 
@@ -39,17 +45,10 @@ TELEGRAM_BOT_API_TOKEN=your_telegram_token
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-## Usage
-
-Run the bot using the following command:
-
-```
-python bot.py
-```
-
 ### Commands
 
 - `/clear` - Clear the conversation history for chatgpt (but not in telegram chat).
+- `/start` - Start a conversation with the bot.
 
 
 ### Restrict access to the bot
