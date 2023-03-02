@@ -87,8 +87,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def post_init(application) -> None:
     await application.bot.set_my_commands(
-            [('start', 'Starts the bot')],
-            [('clear', 'Clears the chat history')]
+            [('start', 'Starts the bot'), ('clear', 'Clears the chat history')]
         )
 
 app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_API_TOKEN")).post_init(post_init).build()
