@@ -5,7 +5,22 @@ This is a telegram bot that uses the [ChatGPT](https://platform.openai.com/docs/
 
 ## Setup
 
-Right now it requires to manually install dependencies:
+### Docker
+
+Build the docker image:
+
+```
+docker build -t chatgpt-telegram-bot .
+```
+
+Run the docker image:
+
+```
+docker run -d --name chatgpt-telegram-bot chatgpt-telegram-bot
+```
+
+### Manually
+Install dependencies:
 - Python 3
 - pip
 
