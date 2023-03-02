@@ -81,9 +81,20 @@ async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.chat_data['history'] = []
     await update.message.reply_text('Chat history cleared.')
 
-app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_API_TOKEN")).build()
+@restricted
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text('Hello, I am a chatbot. Ask me a question. You can also send me an audio message and I will answer it.')
+
+async def post_init(application) -> None:
+    await application.bot.set_my_commands(
+            [('start', 'Starts the bot')],
+            [('clear', 'Clears the chat history')]
+        )
+
+app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_API_TOKEN")).post_init(post_init).build()
 
 app.add_handler(CommandHandler("clear", clear))
+app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), message))
 app.add_handler(MessageHandler(filters.VOICE, transcribe_audio))
 
