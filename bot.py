@@ -9,6 +9,7 @@ from telegram.ext import filters
 import pydub
 from pydub import AudioSegment
 import logging
+from telegram.constants import ChatAction
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -21,6 +22,21 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 allowed_user_ids_str = os.getenv("ALLOWED_USER_IDS")
 allowed_user_ids = allowed_user_ids_str.split(",") if allowed_user_ids_str else []
+
+# Some useful snippets grabbed from https://github.com/python-telegram-bot/python-telegram-bot/wiki/Code-snippets
+def send_action(action):
+    """Sends `action` while processing func command."""
+
+    def decorator(func):
+        @wraps(func)
+        async def command_func(update, context, *args, **kwargs):
+            await context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=action)
+            return await func(update, context,  *args, **kwargs)
+        return command_func
+    
+    return decorator
+
+send_typing_action = send_action(ChatAction.TYPING)
 
 def restricted(func):
     @wraps(func)
@@ -59,13 +75,17 @@ def answer_question(question, context):
 
     
 @restricted
+@send_typing_action
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    pass
     user_input = update.message.text
     await update.message.reply_text(answer_question(user_input, context))
 
 
 @restricted
+@send_typing_action
 async def transcribe_audio(update: Update, context) -> None:
+    pass
     audio_file = await update.message.voice.get_file()
     with tempfile.NamedTemporaryFile(suffix=".mp3") as f:
         await audio_file.download_to_drive(f.name)
