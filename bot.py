@@ -2,9 +2,12 @@ import os
 from dotenv import load_dotenv
 import openai
 from functools import wraps
-from telegram import Update
+import tempfile
+from telegram import Update, Audio
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes
 from telegram.ext import filters
+import pydub
+from pydub import AudioSegment
 
 load_dotenv()
 
@@ -24,10 +27,7 @@ def restricted(func):
         return await func(update, context, *args, **kwargs)
     return wrapped
 
-@restricted
-async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_input = update.message.text
-
+def answer_question(question, context):
     blank_chat_history = [
       {"role": "system", "content": "You are a helpful assistant."}
     ]
@@ -36,7 +36,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_history = context.chat_data.get('history', blank_chat_history)
 
     # append user input to chat history
-    chat_history.append({"role": "user", "content": user_input})
+    chat_history.append({"role": "user", "content": question})
 
     response = openai.ChatCompletion.create(
       model="gpt-3.5-turbo",
@@ -49,7 +49,26 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # update chat history
     context.chat_data['history'] = chat_history
 
-    await update.message.reply_text(response.choices[0].message.content)
+    return response.choices[0].message.content
+
+    
+@restricted
+async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_input = update.message.text
+    await update.message.reply_text(answer_question(user_input, context))
+
+
+@restricted
+async def transcribe_audio(update: Update, context) -> None:
+    audio_file = await update.message.voice.get_file()
+    with tempfile.NamedTemporaryFile(suffix=".mp3") as f:
+        await audio_file.download_to_drive(f.name)
+        sound = AudioSegment.from_ogg(f.name)
+        sound.export(f.name, format="mp3")
+        transcript = openai.Audio.transcribe("whisper-1", f)
+        await update.message.reply_text(transcript["text"]) 
+
+    await update.message.reply_text(answer_question(transcript["text"], context))
 
 @restricted
 async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -60,5 +79,6 @@ app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_API_TOKEN")).build()
 
 app.add_handler(CommandHandler("clear", clear))
 app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), message))
+app.add_handler(MessageHandler(filters.VOICE, transcribe_audio))
 
 app.run_polling()
