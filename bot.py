@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import openai
+from functools import wraps
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes
 from telegram.ext import filters
@@ -9,6 +10,21 @@ load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+allowed_user_ids_str = os.getenv("ALLOWED_USER_IDS")
+allowed_user_ids = allowed_user_ids_str.split(",") if allowed_user_ids_str else []
+
+def restricted(func):
+    @wraps(func)
+    async def wrapped(update, context, *args, **kwargs):
+        user_id = update.effective_user.id.__str__()
+        if allowed_user_ids and user_id not in allowed_user_ids:
+            print(f"Unauthorized access denied for {user_id}.")
+            return
+
+        return await func(update, context, *args, **kwargs)
+    return wrapped
+
+@restricted
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_input = update.message.text
 
@@ -35,6 +51,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     await update.message.reply_text(response.choices[0].message.content)
 
+@restricted
 async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.chat_data['history'] = []
     await update.message.reply_text('Chat history cleared.')

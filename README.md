@@ -50,3 +50,12 @@ python bot.py
 ### Commands
 
 - `/clear` - Clear the conversation history for chatgpt (but not in telegram chat).
+
+
+### Restrict access to the bot
+
+You can restrict access to the bot by adding a list of telegram user ids to the `ALLOWED_USER_IDS` variable in the `.env` file. The bot will only respond to messages from users in the list.
+
+```
+ALLOWED_USER_IDS=123456789,987654321
+```
