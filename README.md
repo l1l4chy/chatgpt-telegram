@@ -25,7 +25,7 @@ Install dependencies:
 - pip
 
 Install dependencies using pip:
-- pip install python-telegram-bot
+- pip install python-telegram-bot[job-queue]
 - pip install openai
 - pip install python-dotenv
 - pip install pydub
